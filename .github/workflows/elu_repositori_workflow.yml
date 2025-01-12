@@ -1,5 +1,9 @@
 name: elu_repositori_workflow
 
+# Establece permisos de escritura para el token GITHUB_TOKEN
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -62,23 +66,21 @@ jobs:
         id: badge
         run: |
           RESULT=$(cat result.txt)
-          if [[ "$RESULT" == "success" ]]; then
+          if [[ "$RESULT" == "tests correctos" ]]; then
             badge="![Success](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)"
           else
             badge="![Failure](https://img.shields.io/badge/test-failure-red)"
           fi
-          echo "cypress_outcome=$RESULT" >> $GITHUB_ENV
           echo "badge_url=$badge" >> $GITHUB_ENV
       - name: Update README with badge
         run: |
-          sed -i '/RESULTAT DELS ÚLTIMS TESTS/ {n; s|.*|'"$badge_url"'|;}' README.md
-          
+          sed -i '/RESULTAT DELS ÚLTIMS TESTS/ {n; s|.*|'"${{ env.badge_url }}"'|;}' README.md
+
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add .
           git commit -m "Update README with test badge" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
-
 
   Deploy_job:
     needs: Cypress_job
